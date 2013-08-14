@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>LeapMotion Sample</title>
+</head>
+<body>
+	<h1>手を閉じた状態から勢いよく手を開いたときにイベントを発火する</h1>
+	<p>解説：LeapMotionから、手が1本で、指の数が0本の状態から5本に素早く切り替わったと認識されたら、イベントを発火する</p>
+	<p>現在の手の数:<span id="hand_count"></span></p>
+	<p>現在の指の数:<span id="finger_count"></span></p>
+	<p>ちょっと前の時間の指の数:<span id="before_finger_count"></span></p>
+	<p>手を勢いよく開いたか？:<span id="bomevent"></span></p>
+<script src="http://js.leapmotion.com/0.2.0/leap.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script>
+$(function() {
+
+	// 値を挿入する対象要素を取得
+	var $hand_count = $('#hand_count');
+	var $finger_count = $('#finger_count');
+	var $bomevent = $('#bomevent');
+	var $before_finger_count = $('#before_finger_count');
+
+	var i = 0;
+	var beforeFingerNo = null;
+
+	// Leapからcontrollerオブジェクトを作成
+	var controller = new Leap.Controller();
+	controller.loop(function(frame) {
+
+		//敏感すぎるので、反応を1/50に
+		i++;
+		if(i%50 === 0){
+
+			// 手の数を取得
+			var hands = frame.hands.length;
+			$hand_count.text(hands);
+
+			// 手が1本の時だけイベントを起こします
+			if(hands === 1){
+
+				// 指の数を取得
+				var fingers = frame.pointables.length;
+				$finger_count.text(fingers);
+
+				// 手が閉じた状態(指0本)になったら、初期値に戻す
+				if(fingers === 0){
+					$bomevent.text('');
+				}
+				// 手が開いた状態(指5本)になったら、かつ、前回の指の数が0だったらイベントを実行
+				else if(fingers === 5 && beforeFingerNo === 0){
+					$bomevent.text('Yes!');
+				}
+
+				// 現在の指の数を保持
+				beforeFingerNo = fingers;
+				$before_finger_count.text(beforeFingerNo);
+			}
+		}
+	});
+
+});
+</script>
+</body>
+</html>

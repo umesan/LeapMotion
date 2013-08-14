@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>LeapMotion Sample</title>
+</head>
+<body>
+	<h1>LeapMotion で取得できる各値</h1>
+	<p>ジェスチャーの種類（circle,swipe,keyTap,screenTap）: <span id="type"></span></p>
+	<p>ジェスチャーの状態（start,update,stop）: <span id="state"></span></p>
+	<p>指の位置X:<span id="xfinger"></span></p>
+	<p>指の位置Y:<span id="yfinger"></span></p>
+	<p>指の位置Z:<span id="zfinger"></span></p>
+	<p>手の数:<span id="hand_count"></span></p>
+	<p>指の数:<span id="finger_count"></span></p>
+
+	<h1>＜参考サイト＞</h1>
+	<ul>
+		<li>公式：<a href="https://www.leapmotion.com/">https://www.leapmotion.com/</a></li>
+		<li>ダウンロード：<a href="https://www.leapmotion.com/setup">https://www.leapmotion.com/setup</a></li>
+		<li>JavaScriptでLeapMotionアプリを作る方法：<a href="http://kray.jp/blog/leap-motion-javascript/">http://kray.jp/blog/leap-motion-javascript/</a></li>
+		<li>Leap MotionをJavaScriptで弄る：<a href="http://www.aguuu.com/archives/2013/08/leap-motion-controller/">http://www.aguuu.com/archives/2013/08/leap-motion-controller/</a></li>
+		<li>LEAP Motion の実装を解説：<a href="http://syslog.shimy.net/?p=519">http://syslog.shimy.net/?p=519</a></li>
+		<li>LeapMotion + enchant.jsで弾幕系シューティング作ってみた：<a href="http://www.honeycomb-lab.co.jp/blog/tech/?p=422">http://www.honeycomb-lab.co.jp/blog/tech/?p=422</a></li>
+		<li>LeapJS Examples：<a href="http://js.leapmotion.com/examples">http://js.leapmotion.com/examples</a></li>
+	</ul>
+
+<script src="http://js.leapmotion.com/0.2.0/leap.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script>
+$(function() {
+
+	// 値を挿入する対象要素を取得
+	var $typeValue = $('#type');
+	var $stateValue = $('#state');
+	var $xfinger = $('#xfinger');
+	var $yfinger = $('#yfinger');
+	var $zfinger = $('#zfinger');
+	var $hand_count = $('#hand_count');
+	var $finger_count = $('#finger_count');
+
+	// 変数宣言
+	var fingerPosX,fingerPosY,fingerPosZ;
+
+	// Leap の中身を参照
+	// console.log(Leap);
+
+	// Leapからcontrollerオブジェクトを作成
+	var controller = new Leap.Controller({
+		//作成の際、ジェスチャーを有効にする
+		enableGestures: true
+	});
+
+	// controllerを作成後、controllerのloopにfunctionを引数として渡すと、
+	// 毎フレームこのfunctionが呼び出される
+	controller.loop(function(frame) {
+
+		// 手の数を取得
+		var hands = frame.hands.length;
+		console.log('hands:'+hands);
+		$hand_count.text(hands);
+
+		// 指の数を取得
+		var fingers = frame.pointables.length;
+		console.log('fingers:'+fingers);
+		$finger_count.text(fingers);
+
+		// 指として認識されたのが1本以上あるか
+		if(frame.fingers.length > 0){
+
+			// X方向（左右）の動きを取得
+			fingerPosX = frame.fingers[0].tipPosition[0];
+			console.log('fingerPosX:'+fingerPosX);
+			$xfinger.text(fingerPosX);
+
+			// Y方向（上下）の動きを取得
+			fingerPosY = frame.fingers[0].tipPosition[1];
+			console.log('fingerPosY:'+fingerPosY);
+			$zfinger.text(fingerPosY);
+
+			// Z方向（手前・奥）の動きを取得
+			fingerPosZ = frame.fingers[0].tipPosition[2];
+			console.log('fingerPosZ:'+fingerPosZ);
+			$yfinger.text(fingerPosZ);
+
+			// ジェスチャー操作の取得
+			$(frame.gestures).each(function() {
+				$typeValue.html(this.type);
+				$stateValue.html(this.state);
+			});
+
+		}
+
+	});
+
+});
+</script>
+</body>
+</html>
