@@ -8,6 +8,7 @@
 	<h1>LeapMotion で取得できる各値</h1>
 	<p>ジェスチャーの種類（circle,swipe,keyTap,screenTap）: <span id="type"></span></p>
 	<p>ジェスチャーの状態（start,update,stop）: <span id="state"></span></p>
+	<p>swipe ジェスチャーの方向:<span id="finger_vector"></span></p>
 	<p>指の位置X:<span id="xfinger"></span></p>
 	<p>指の位置Y:<span id="yfinger"></span></p>
 	<p>指の位置Z:<span id="zfinger"></span></p>
@@ -23,10 +24,55 @@
 		<li>LEAP Motion の実装を解説：<a href="http://syslog.shimy.net/?p=519">http://syslog.shimy.net/?p=519</a></li>
 		<li>LeapMotion + enchant.jsで弾幕系シューティング作ってみた：<a href="http://www.honeycomb-lab.co.jp/blog/tech/?p=422">http://www.honeycomb-lab.co.jp/blog/tech/?p=422</a></li>
 		<li>LeapJS Examples：<a href="http://js.leapmotion.com/examples">http://js.leapmotion.com/examples</a></li>
+		<li>REVEAL JS + LEAP MOTION LeapMotionを使ってプレゼンしたいあなたへ。：<a href="http://www.polidog.jp/sample/reveal.html">http://www.polidog.jp/sample/reveal.html</a></li>
 	</ul>
 
 <script src="http://js.leapmotion.com/0.2.0/leap.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script>
+/**
+ * LeapMotion Gesture jQuery Plugin
+ * http://www.polidog.jp/sample/reveal.html
+ */
+(function($) {
+	var getGestureType = function(gesture, distanse) {
+		// horizon
+		var ret = checkType(gesture, 0, distanse, ["right","left"]);
+		if (ret !== false) return ret;
+		return checkType(gesture, 1, distanse, ["up","down"]);
+	}
+
+	var checkType = function(gesture,pos,distanse,names) {
+		var _distanse = Math.abs(gesture.position[pos] - gesture.startPosition[pos]);
+		if (_distanse < distanse) return false;
+		if (gesture.direction[pos] > 0) {
+			return names[0];
+		} else {
+			return names[1];
+		}
+	}
+
+	$.fn.leapSwipeHelper = function(callback,options) {
+		options = $.extend({
+			distance: 80
+		});
+
+		var type = false;
+		this.each(function(){
+			if (this.state == "stop" && this.type == "swipe") {
+				type = getGestureType(this,options.distance);
+			}
+		});
+
+		if (typeof callback === "function" && type !== false) {
+			callback({type:type,gesture:this});
+		}
+		return type;
+	}
+}(jQuery));
+</script>
+
+
 <script>
 $(function() {
 
@@ -38,6 +84,7 @@ $(function() {
 	var $zfinger = $('#zfinger');
 	var $hand_count = $('#hand_count');
 	var $finger_count = $('#finger_count');
+	var $finger_vector = $('#finger_vector');
 
 	// 変数宣言
 	var fingerPosX,fingerPosY,fingerPosZ;
@@ -57,12 +104,12 @@ $(function() {
 
 		// 手の数を取得
 		var hands = frame.hands.length;
-		console.log('hands:'+hands);
+		// console.log('hands:'+hands);
 		$hand_count.text(hands);
 
 		// 指の数を取得
 		var fingers = frame.pointables.length;
-		console.log('fingers:'+fingers);
+		// console.log('fingers:'+fingers);
 		$finger_count.text(fingers);
 
 		// 指として認識されたのが1本以上あるか
@@ -70,17 +117,17 @@ $(function() {
 
 			// X方向（左右）の動きを取得
 			fingerPosX = frame.fingers[0].tipPosition[0];
-			console.log('fingerPosX:'+fingerPosX);
+			// console.log('fingerPosX:'+fingerPosX);
 			$xfinger.text(fingerPosX);
 
 			// Y方向（上下）の動きを取得
 			fingerPosY = frame.fingers[0].tipPosition[1];
-			console.log('fingerPosY:'+fingerPosY);
+			// console.log('fingerPosY:'+fingerPosY);
 			$zfinger.text(fingerPosY);
 
 			// Z方向（手前・奥）の動きを取得
 			fingerPosZ = frame.fingers[0].tipPosition[2];
-			console.log('fingerPosZ:'+fingerPosZ);
+			// console.log('fingerPosZ:'+fingerPosZ);
 			$yfinger.text(fingerPosZ);
 
 			// ジェスチャー操作の取得
@@ -91,9 +138,34 @@ $(function() {
 
 		}
 
+		// swipeジェスチャー方向の取得
+		var motionFlag = true;
+		$(frame.gestures).leapSwipeHelper(
+			function(event){ 
+				if (motionFlag === false) return; 
+				switch(event.type) {
+					case "up":
+						$finger_vector.text('up');
+						break;
+					case "down":
+						$finger_vector.text('down');
+						break;
+					case "left":
+						$finger_vector.text('left');
+						break;
+					case "right":
+						$finger_vector.text('right');
+						break;
+				}
+				motionFlag = false;
+				setTimeout(function(){
+					motionFlag = true;
+				}, 1000);
+			}
+		);
 	});
-
 });
+
 </script>
 </body>
 </html>
